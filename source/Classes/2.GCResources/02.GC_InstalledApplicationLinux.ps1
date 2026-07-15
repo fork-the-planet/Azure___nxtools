@@ -41,10 +41,26 @@ class GC_InstalledApplicationLinux
 
     [GC_InstalledApplicationLinux] Get()
     {
-        $this.ConvertAttributesYmlContentToStringArray()
-
         $getResult = [GC_InstalledApplicationLinux]@{
             Name = $this.Name
+        }
+
+        try
+        {
+            $this.ConvertAttributesYmlContentToStringArray()
+        }
+        catch
+        {
+            # An invalid package name is a control-plane misconfiguration. Report it as a
+            # non-compliant reason (surfacing the validation message) instead of throwing,
+            # so policy gets a clear reason. The invalid name is never evaluated because
+            # validation happens before it is passed to the package manager.
+            $getResult.Reasons += [Reason]@{
+                code = '{0}:{0}:Ensure' -f $this.GetType()
+                phrase = $_.Exception.Message
+            }
+
+            return $getResult
         }
 
         $getResult.PackageShouldBeInstalled = (Get-nxPackageInstalled -Name $this.PackageShouldBeInstalled -ErrorAction Ignore).Name
@@ -84,7 +100,14 @@ class GC_InstalledApplicationLinux
         # split what's in [] with ; separator
         # update $this.PackageShouldBeInstalled
         $stringList = $this.AttributesYmlContent -replace '^packages:\s*\[|^\[|\]$'
-        $this.PackageShouldBeInstalled = $stringList -split '\s*;\s*'
+        $packageNames = $stringList -split '\s*;\s*'
+
+        # The attribute content is externally supplied; validate it before it is
+        # used so a crafted package name cannot be interpreted as anything other
+        # than a package identifier downstream.
+        Assert-nxValidPackageName -Name $packageNames
+
+        $this.PackageShouldBeInstalled = $packageNames
     }
 
     [void] ConvertStringArrayToAttributeYmlContent()

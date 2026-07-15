@@ -3,14 +3,28 @@
 The format is based on and uses the types of changes according to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.7.0]
+
+### Added
+
+- Added the `Assert-nxValidPackageName` helper which validates package names
+  against a strict allow-list.
 
 ### Fixed
 
-- For the nxUser resource, improved /etc/shadow file parsing.
-- Fixed a validation error related to an 'AccessRight' parameter when a file has empty permissions for one or more categories.
-- For the nxUser resource, fixed set not working when the user already exists.
-- For the nxUser resource, fixed set creating a user with the wrong encrypted password.
+- Hardened the `GC_InstalledApplicationLinux` / `GC_NotInstalledApplicationLinux`
+  resources to treat externally supplied package names strictly as data: names are
+  now validated against a strict allow-list before use.
+
+## [1.6.0] - 2025-07-24
+
+### Fixed
+
+- Fixed issues with the nxUser resource:
+   - Fixed set not working when the user already exists.
+   - Fixed set creating a user with the wrong encrypted password.
+   - Improved /etc/shadow file parsing.
+- Fixed a validation error related to an AccessRight parameter when a file has empty permissions for one or more categories.
 
 ## [1.5.0] - 2025-01-28
 
